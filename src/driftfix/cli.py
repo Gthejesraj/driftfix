@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
+from importlib.metadata import version
 from pathlib import Path
 
 # Pinning back to the old version is not a fix. Adding a split-out package is fine.
@@ -137,6 +138,7 @@ def fix(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="driftfix", description=__doc__)
+    p.add_argument("--version", action="version", version=f"%(prog)s {version('driftfix')}")
     sub = p.add_subparsers(dest="command", required=True)
     f = sub.add_parser("fix", help="fix code broken by a dependency upgrade")
     f.add_argument("--package", required=True)

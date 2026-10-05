@@ -2,14 +2,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-from driftfix.cli import main
 import driftfix.cli as cli
+from driftfix.cli import main
 
 
 def make_repo(tmp_path: Path, ok: bool) -> Path:
     (tmp_path / "app.py").write_text(f"OK = {ok}\n")
     (tmp_path / "requirements.txt").write_text("lib==2\n")
-    for cmd in (["init", "-q"], ["add", "."], ["-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "init"]):
+    commit = ["-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "init"]
+    for cmd in (["init", "-q"], ["add", "."], commit):
         subprocess.run(["git", *cmd], cwd=tmp_path, check=True)
     return tmp_path
 
@@ -72,8 +73,9 @@ def test_adding_a_split_out_package_is_allowed(tmp_path, monkeypatch):
 
 
 def test_pins_package():
-    from driftfix.cli import pins_package
     import tempfile
+
+    from driftfix.cli import pins_package
     repo = Path(tempfile.mkdtemp())
     (repo / "poetry.lock").write_text("x")
     (repo / "requirements.txt").write_text("Pydantic_Core==1\n")

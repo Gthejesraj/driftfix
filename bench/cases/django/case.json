@@ -1,0 +1,1 @@
+{"package": "django", "old": "django==3.2.25", "new": "django>=5,<6", "python": "3.10"}

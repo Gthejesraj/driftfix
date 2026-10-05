@@ -1,0 +1,1 @@
+{"package": "pillow", "old": "pillow==9.5.0", "new": "pillow>=10", "python": "3.11"}

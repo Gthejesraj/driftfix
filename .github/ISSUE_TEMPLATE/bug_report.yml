@@ -1,0 +1,17 @@
+name: Bug report
+description: Something in driftfix itself is broken (CLI, Action, guardrails).
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened and what you expected }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: Steps to reproduce, render: bash }
+  - type: input
+    id: version
+    attributes: { label: driftfix version, placeholder: "driftfix --version" }
+  - type: dropdown
+    id: where
+    attributes: { label: Where, options: [CLI, GitHub Action] }

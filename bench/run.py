@@ -6,6 +6,7 @@
 
 import json
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -20,14 +21,15 @@ def sh(cmd: str, cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True)
 
 
-def setup(case: Path, spec: str) -> Path:
-    """Copy a case into a fresh git repo with `spec` installed in .venv."""
+def setup(case: Path, spec: str, python: str = "3.12") -> Path:
+    """Copy a case into a fresh git repo with `spec` (space-separated) installed in .venv."""
     repo = Path(tempfile.mkdtemp(prefix=f"driftfix-{case.name}-"))
     shutil.copytree(case, repo, dirs_exist_ok=True)
     (repo / ".gitignore").write_text(".venv/\n__pycache__/\n.pytest_cache/\n")
     for cmd in (
-        "uv venv -q --seed -p 3.12 .venv",
-        f"uv pip install -q -p .venv/bin/python pytest '{spec}'",
+        f"uv venv -q --seed -p {python} .venv",
+        f"uv pip install -q -p .venv/bin/python pytest {' '.join(map(shlex.quote, spec.split()))}"
+        + (" -b build-constraints.txt" if (case / "build-constraints.txt").exists() else ""),
         "git init -q && git add -A && git -c user.email=b@b -c user.name=bench commit -qm init",
     ):
         if (r := sh(cmd, repo)).returncode:
@@ -47,15 +49,16 @@ def main(args: list[str]) -> None:
     for name in names:
         case = CASES / name
         meta = json.loads((case / "case.json").read_text())
+        py = meta.get("python", "3.12")
         if check:
-            old_ok = sh(TEST, setup(case, meta["old"])).returncode == 0
-            new_ok = sh(TEST, setup(case, meta["new"])).returncode == 0
+            old_ok = sh(TEST, setup(case, meta["old"], py)).returncode == 0
+            new_ok = sh(TEST, setup(case, meta["new"], py)).returncode == 0
             print(f"{name:12} old {'pass' if old_ok else 'FAIL'}  new {'pass' if new_ok else 'fail'}"
                   f"  {'ok' if old_ok and not new_ok else '<-- broken case'}")
             continue
 
-        repo = setup(case, meta["new"])
-        old = re.sub(r"^[^0-9]*", "", meta["old"])
+        repo = setup(case, meta["new"], py)
+        old = re.sub(r"^[^0-9]*", "", meta["old"].split()[0])
         new = version(repo, meta["package"])
         report = repo / ".driftfix.md"
         r = sh(f"driftfix fix --package {meta['package']} --from {old} --to {new} "

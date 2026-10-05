@@ -1,0 +1,25 @@
+name: driftfix couldn't fix an upgrade
+description: An upgrade driftfix failed on, or fixed badly. These become benchmark cases.
+labels: [failed-fix]
+body:
+  - type: input
+    id: upgrade
+    attributes: { label: Upgrade, placeholder: "pandas 1.5.3 → 2.2.0" }
+    validations: { required: true }
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: What happened
+      options: ["Not fixed (tests still failing)", "Fixed, but the change was wrong or bad", "Crashed / errored"]
+    validations: { required: true }
+  - type: textarea
+    id: report
+    attributes:
+      label: driftfix report
+      description: The PR comment or CLI output. Remove secrets and private code.
+      render: markdown
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A small snippet using the old API is ideal. Bonus points for a bench case PR.

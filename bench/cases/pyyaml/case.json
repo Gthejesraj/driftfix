@@ -1,0 +1,1 @@
+{"package": "pyyaml", "old": "pyyaml==5.4.1", "new": "pyyaml>=6", "python": "3.9"}

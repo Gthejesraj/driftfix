@@ -4,18 +4,43 @@ build-backend = "hatchling.build"
 
 [project]
 name = "driftfix"
-version = "0.1.1"
+version = "0.2.0"
 description = "Dependabot bumps it. CI breaks. driftfix fixes the code."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
+authors = [{ name = "Gthejesraj" }]
+keywords = ["dependabot", "dependencies", "upgrade", "migration", "breaking-changes", "claude", "ai", "github-action"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = ["claude-agent-sdk>=0.2"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.6"]
 
 [project.scripts]
 driftfix = "driftfix.cli:main"
 
 [project.urls]
-Repository = "https://github.com/Gthejesraj/driftfix"
+Homepage = "https://github.com/Gthejesraj/driftfix"
+Issues = "https://github.com/Gthejesraj/driftfix/issues"
+Changelog = "https://github.com/Gthejesraj/driftfix/blob/main/CHANGELOG.md"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+extend-exclude = ["bench/cases"]  # deliberately old-style code
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
