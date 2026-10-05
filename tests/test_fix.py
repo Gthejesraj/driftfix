@@ -83,3 +83,9 @@ def test_pins_package():
     assert pins_package(repo, "requirements.txt", "pydantic-core")  # name normalization
     assert not pins_package(repo, "requirements.txt", "pydantic")   # pydantic-core is a different package
     assert not pins_package(repo, "app.py", "pydantic")
+
+
+def test_tests_cannot_see_api_key(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-secret")
+    leak = f"{sys.executable} -c 'import os, sys; sys.exit(\"ANTHROPIC_API_KEY\" in os.environ)'"
+    assert cli.run_tests(leak, tmp_path, 30).passed

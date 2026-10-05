@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Test commands no longer see `ANTHROPIC_API_KEY` or GitHub tokens
+
 ## 0.2.0
 - 5 more benchmark cases: pandas 2, Django 5, Flask 3, Pillow 10, PyYAML 6
 - `driftfix --version`

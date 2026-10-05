@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import re
 import subprocess
 import sys
@@ -13,6 +14,8 @@ from pathlib import Path
 
 # Pinning back to the old version is not a fix. Adding a split-out package is fine.
 MANIFESTS = {"requirements.txt", "pyproject.toml", "setup.py", "setup.cfg", "Pipfile", "package.json"}
+# The test suite runs the upgraded package's code; it shouldn't see our credentials.
+SECRETS = {"ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN", "GITHUB_TOKEN", "GH_TOKEN"}
 LOCKFILES = {"Pipfile.lock", "poetry.lock", "uv.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"}
 
 PROMPT = """\
@@ -41,7 +44,8 @@ class TestRun:
 def run_tests(command: str, repo: Path, timeout: int) -> TestRun:
     try:
         proc = subprocess.run(
-            command, shell=True, cwd=repo, capture_output=True, text=True, timeout=timeout
+            command, shell=True, cwd=repo, capture_output=True, text=True, timeout=timeout,
+            env={k: v for k, v in os.environ.items() if k not in SECRETS},
         )
     except subprocess.TimeoutExpired:
         return TestRun(False, f"timed out after {timeout}s")
