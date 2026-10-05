@@ -46,7 +46,7 @@ runs:
     - if: steps.fix.outputs.code == '0'
       shell: bash
       run: |
-        git add -A -- . ':!**/__pycache__/**' ':!.pytest_cache/**'
+        git add -A && git reset -q -- ':(glob)**/__pycache__/**' ':(glob).pytest_cache/**'
         git diff --cached --quiet && exit 0
         git -c user.name="driftfix[bot]" -c user.email="driftfix@users.noreply.github.com" \
           commit -qm "fix: adapt code to ${{ inputs.package || steps.meta.outputs.dependency-names }} upgrade"
