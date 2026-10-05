@@ -24,8 +24,9 @@ Real breaking upgrades, each a small app with tests that pass on the old version
 | openai | 0.28.1 → 3.24.0 | ✅ | $0.29 | 1 file changed, 4 insertions(+), 3 deletions(-) |
 | pydantic | 1.10.21 → 2.13.5 | ✅ | $0.20 | 1 file changed, 11 insertions(+), 11 deletions(-) |
 | sqlalchemy | 1.4.54 → 2.1.3 | ✅ | $0.19 | 1 file changed, 7 insertions(+), 4 deletions(-) |
+| pydantic (6-file app, shared base model) | 1.10.21 → 2.13.5 | ✅ | $0.51 | 4 files changed, 47 insertions(+), 29 deletions(-) |
 
-5/5 fixed for $0.94 total, no test edits. Rerun: `python bench/run.py` (or `--check` to validate cases for free).
+6/6 fixed for $1.45 total, no test edits. The 6-file case runs with deprecation warnings as errors and includes a silent behavior change (v2 stops coercing numeric SKUs to strings). Rerun: `python bench/run.py` (or `--check` to validate cases for free).
 More cases welcome: add a folder under `bench/cases/`.
 
 ## GitHub Action
