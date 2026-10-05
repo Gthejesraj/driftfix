@@ -15,7 +15,7 @@ runs:
   steps:
     - id: meta
       if: inputs.package == ''
-      uses: dependabot/fetch-metadata@v2
+      uses: dependabot/fetch-metadata@v3
 
     - uses: actions/setup-python@v5
       with: { python-version: "3.12" }
