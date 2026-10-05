@@ -59,7 +59,7 @@ or GitHub App token in `actions/checkout` if you want CI to rerun on the fix.
 ## CLI
 
 ```bash
-pip install git+https://github.com/Gthejesraj/driftfix
+pip install driftfix
 # after upgrading a dependency and seeing tests fail:
 driftfix fix --package openai --from 0.28 --to 1.40 --test "pytest -q"
 ```
