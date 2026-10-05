@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.1
 - Test commands no longer see `ANTHROPIC_API_KEY` or GitHub tokens
 - Report the real cost when the agent stops on its budget (was $0.00)
 - The pinning-back guard now allows widening the requirement to admit the new version (e.g. dropping `<2.0.0`)

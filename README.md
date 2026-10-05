@@ -55,6 +55,23 @@ for free with `python bench/run.py --check`.
 **Found an upgrade it can't fix? That's the most useful contribution:** see
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
+### Real projects
+
+The synthetic cases above are small. On real open-source projects broken by
+pydantic 1 → 2 ([study](https://github.com/Gthejesraj/driftfix-study), 39
+candidates → 4 real breaks):
+
+| Project | Tests broken | Result | Cost |
+|---|---|---|---|
+| internetarchive/fatcat-scholar | 15 of 115 | ✅ fixed, 11 files | $2.38 |
+| antonagestam/phantom-types | 2 of 677 | ✅ fixed, one test assertion edit to review | $2.93 |
+| epi2me-labs/ezcharts | 5 of 37 | ✅ fixed, including the model generator | ~$1 |
+| bdd100k/bdd100k | 2 of 46 | ⚠️ tests pass, but via a workaround for a third-party library | $0.95 |
+
+Real fixes cost $1–3, not $0.20, so set `budget` to at least 3 for real
+codebases. Always read the diff: "tests pass" and "correct" aren't the same
+thing. Details in the study's [RESULTS.md](https://github.com/Gthejesraj/driftfix-study/blob/main/RESULTS.md).
+
 ## Quick start: GitHub Action
 
 1. Add `.github/workflows/driftfix.yml`:
