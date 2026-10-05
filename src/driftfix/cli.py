@@ -99,9 +99,12 @@ async def run_agent(prompt: str, repo: Path, model: str, max_turns: int, budget:
         skills=[],
     )
     summary, cost = "", 0.0
-    async for message in query(prompt=prompt, options=options):
-        if isinstance(message, ResultMessage):
-            summary, cost = message.result or "", message.total_cost_usd or 0.0
+    try:
+        async for message in query(prompt=prompt, options=options):
+            if isinstance(message, ResultMessage):
+                summary, cost = message.result or "", message.total_cost_usd or 0.0
+    except Exception as exc:  # e.g. budget reached; the cost was already reported above
+        return f"Agent stopped: `{exc}`", cost
     return summary, cost
 
 

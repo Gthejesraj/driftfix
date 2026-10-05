@@ -89,3 +89,23 @@ def test_tests_cannot_see_api_key(tmp_path, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-secret")
     leak = f"{sys.executable} -c 'import os, sys; sys.exit(\"ANTHROPIC_API_KEY\" in os.environ)'"
     assert cli.run_tests(leak, tmp_path, 30).passed
+
+
+def test_cost_survives_agent_error(monkeypatch):
+    import asyncio
+    import sys as _sys
+    import types
+
+    class ResultMessage:
+        result, total_cost_usd = "", 1.02
+
+    async def query(**kw):
+        yield ResultMessage()
+        raise RuntimeError("Reached maximum budget ($1)")
+
+    fake = types.SimpleNamespace(
+        ClaudeAgentOptions=lambda **kw: None, ResultMessage=ResultMessage, query=query
+    )
+    monkeypatch.setitem(_sys.modules, "claude_agent_sdk", fake)
+    summary, cost = asyncio.run(cli.run_agent("p", Path("."), "m", 1, 1.0))
+    assert cost == 1.02 and "maximum budget" in summary

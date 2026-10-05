@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Test commands no longer see `ANTHROPIC_API_KEY` or GitHub tokens
+- Report the real cost when the agent stops on its budget (was $0.00)
 
 ## 0.2.0
 - 5 more benchmark cases: pandas 2, Django 5, Flask 3, Pillow 10, PyYAML 6
