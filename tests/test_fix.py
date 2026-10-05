@@ -109,3 +109,15 @@ def test_cost_survives_agent_error(monkeypatch):
     monkeypatch.setitem(_sys.modules, "claude_agent_sdk", fake)
     summary, cost = asyncio.run(cli.run_agent("p", Path("."), "m", 1, 1.0))
     assert cost == 1.02 and "maximum budget" in summary
+
+
+def test_loosening_cap_is_allowed_pinning_back_is_not(tmp_path):
+    from driftfix.cli import pins_package
+    repo = make_repo(tmp_path, True)
+    (repo / "requirements.txt").write_text("lib>=2.0.0\n")         # was lib==2, loosened
+    assert not pins_package(repo, "requirements.txt", "lib", "2.13.5")
+    (repo / "requirements.txt").write_text("lib<2\n")              # pinned back
+    assert pins_package(repo, "requirements.txt", "lib", "2.13.5")
+    (repo / "requirements.txt").write_text("lib>=2.0.0\n")         # unknown target version: be strict
+    assert pins_package(repo, "requirements.txt", "lib", None)
+    assert pins_package(repo, "requirements.txt", "lib", "1.x")    # unparsable version: be strict

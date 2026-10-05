@@ -12,6 +12,9 @@ from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.version import InvalidVersion, Version
+
 # Pinning back to the old version is not a fix. Adding a split-out package is fine.
 MANIFESTS = {"requirements.txt", "pyproject.toml", "setup.py", "setup.cfg", "Pipfile", "package.json"}
 # The test suite runs the upgraded package's code; it shouldn't see our credentials.
@@ -27,7 +30,8 @@ $ {test_command}
 Fix this repository's code so it works with the new version of `{package}`.
 - Read the package's changelog / migration guide for the relevant versions if you need to.
 - Change application code. Change tests only where they use `{package}`'s API directly.
-- Never pin, downgrade, or change the requirement for `{package}`, and never edit lock files.
+- Never pin or downgrade `{package}`, and never edit lock files. You may only widen its
+  requirement so the new version is allowed (e.g. drop an old upper bound).
 - If the new version moved code into a separate package, you may add that package to the
   dependency manifest and install it into the current environment.
 - Never delete or skip tests to make them pass.
@@ -60,8 +64,17 @@ def changed_files(repo: Path) -> list[str]:
     return [line[3:].split(" -> ")[-1] for line in out.splitlines()]
 
 
-def pins_package(repo: Path, path: str, package: str) -> bool:
-    """Did this edit touch a lock file, or any requirement line naming the upgraded package?"""
+def admits(line: str, new_version: str | None) -> bool:
+    """Is this requirement line one that allows the upgraded version (e.g. a loosened cap)?"""
+    try:
+        req = Requirement(line.strip().strip("\"',"))
+        return new_version is not None and req.specifier.contains(Version(new_version), prereleases=True)
+    except (InvalidRequirement, InvalidVersion):
+        return False
+
+
+def pins_package(repo: Path, path: str, package: str, new_version: str | None = None) -> bool:
+    """Did this edit touch a lock file, or add a requirement for the package that excludes the new version?"""
     if Path(path).name in LOCKFILES:
         return True
     if Path(path).name not in MANIFESTS:
@@ -69,13 +82,13 @@ def pins_package(repo: Path, path: str, package: str) -> bool:
     diff = subprocess.run(
         ["git", "diff", "-U0", "--", path], cwd=repo, capture_output=True, text=True
     ).stdout
-    lines = (
-        [line[1:] for line in diff.splitlines() if line[:1] in "+-" and line[:3] not in ("+++", "---")]
+    added = (
+        [line[1:] for line in diff.splitlines() if line[:1] == "+" and line[:3] != "+++"]
         if diff else (repo / path).read_text().splitlines()  # new, untracked file
     )
     names = "|".join(re.sub(r"[-_.]", "[-_.]", n) for n in re.split(r"[,\s]+", package) if n)
     pattern = re.compile(rf"(?<![\w.-])({names})(?![\w.-])", re.IGNORECASE)
-    return any(pattern.search(line) for line in lines)
+    return any(pattern.search(line) and not admits(line, new_version) for line in added)
 
 
 def build_prompt(package: str, old: str | None, new: str | None, command: str, out: str) -> str:
@@ -127,7 +140,7 @@ def fix(args: argparse.Namespace) -> int:
         summary, cost = f"Agent error: `{exc}`", 0.0
 
     touched = [f for f in changed_files(repo) if f not in baseline]
-    pinned = [f for f in touched if pins_package(repo, f, args.package)]
+    pinned = [f for f in touched if pins_package(repo, f, args.package, args.to_version)]
     after = run_tests(args.test, repo, args.timeout)  # don't trust the agent's word
     ok = after.passed and bool(touched) and not pinned
 

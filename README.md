@@ -111,9 +111,10 @@ Exit codes: `0` fixed or nothing to fix, `1` not fixed, `2` dirty working tree.
 
 - **Your tests decide.** driftfix reruns them after the agent finishes. The
   agent saying it's done doesn't count.
-- **No pinning back.** Changing the upgraded package's requirement or editing
-  lock files is rejected. Adding a package the upgrade split out (like
-  `pydantic-settings`) is allowed.
+- **No pinning back.** A requirement that excludes the new version, or any
+  lock file edit, is rejected. Widening a requirement so the new version is
+  allowed (dropping an old `<2` cap) is fine, and so is adding a package the
+  upgrade split out (like `pydantic-settings`).
 - **No deleting or skipping tests.** The agent is told not to, and every test
   change shows up in the diff you review.
 - **Reviewable.** It needs a clean git tree, so every change is a diff, and it

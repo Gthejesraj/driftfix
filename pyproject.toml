@@ -24,7 +24,7 @@ classifiers = [
   "Topic :: Software Development :: Build Tools",
   "Topic :: Software Development :: Quality Assurance",
 ]
-dependencies = ["claude-agent-sdk>=0.2"]
+dependencies = ["claude-agent-sdk>=0.2", "packaging>=23"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
