@@ -1,0 +1,56 @@
+name: driftfix
+description: Dependabot bumps it. CI breaks. driftfix fixes the code and pushes it to the PR.
+branding: { icon: tool, color: green }
+
+inputs:
+  anthropic-api-key: { required: true }
+  setup: { description: Command that installs your project's dependencies, default: "pip install -r requirements.txt" }
+  test: { description: Test command, default: "pytest -q" }
+  package: { description: Package that was upgraded (auto-detected on Dependabot PRs), default: "" }
+  model: { default: claude-opus-5 }
+  budget: { description: Max USD per run, default: "5" }
+
+runs:
+  using: composite
+  steps:
+    - id: meta
+      if: inputs.package == ''
+      uses: dependabot/fetch-metadata@v2
+
+    - uses: actions/setup-python@v5
+      with: { python-version: "3.12" }
+
+    - shell: bash
+      run: |
+        pip install -q "${{ github.action_path }}"
+        ${{ inputs.setup }}
+
+    - id: fix
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+      run: |
+        set +e
+        driftfix fix \
+          --package "${{ inputs.package || steps.meta.outputs.dependency-names }}" \
+          --from "${{ steps.meta.outputs.previous-version }}" \
+          --to "${{ steps.meta.outputs.new-version }}" \
+          --test "${{ inputs.test }}" --model "${{ inputs.model }}" --budget "${{ inputs.budget }}" \
+          --summary "$RUNNER_TEMP/driftfix.md"
+        echo "code=$?" >> "$GITHUB_OUTPUT"
+
+    - if: steps.fix.outputs.code == '0'
+      shell: bash
+      run: |
+        git add -A -- . ':!**/__pycache__/**' ':!.pytest_cache/**'
+        git diff --cached --quiet && exit 0
+        git -c user.name="driftfix[bot]" -c user.email="driftfix@users.noreply.github.com" \
+          commit -qm "fix: adapt code to ${{ inputs.package || steps.meta.outputs.dependency-names }} upgrade"
+        git push
+
+    - if: always()
+      shell: bash
+      env: { GH_TOKEN: "${{ github.token }}" }
+      run: |
+        [ -f "$RUNNER_TEMP/driftfix.md" ] || exit 0
+        gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/driftfix.md"

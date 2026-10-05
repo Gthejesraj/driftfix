@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "driftfix"
+version = "0.1.0"
+description = "Dependabot bumps it. CI breaks. driftfix fixes the code."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = ["claude-agent-sdk>=0.2"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+driftfix = "driftfix.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Gthejesraj/driftfix"
