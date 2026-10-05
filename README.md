@@ -143,6 +143,13 @@ Native Renovate support is on the roadmap.
 workflows from commits pushed with the default `GITHUB_TOKEN`. Pass a personal
 access token or GitHub App token to `actions/checkout` if you want that.
 
+**Can it fix deprecations before they break?** Yes. Make the test command
+treat them as errors, e.g. `pytest -q -W error::DeprecationWarning` (some
+libraries use their own warning class, like
+`-W error::starlette.exceptions.StarletteDeprecationWarning`). On a real
+31-file FastAPI app, this caught Starlette's `httpx` → `httpx2` deprecation and
+fixed it with a one-line dependency swap ($0.40).
+
 **Mocked tests?** driftfix can only catch what your tests catch. A test that
 mocks the library can pass while the real call is broken.
 
