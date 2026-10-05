@@ -1,0 +1,1 @@
+{"package": "sqlalchemy", "old": "sqlalchemy==1.4.54", "new": "sqlalchemy>=2,<3"}

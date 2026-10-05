@@ -1,0 +1,1 @@
+{"package": "httpx", "old": "httpx==0.27.2", "new": "httpx>=0.28,<1"}

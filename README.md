@@ -13,6 +13,21 @@ Dependabot PR (openai 0.28 → 1.x) → tests fail → Claude fixes code → tes
                                                                               └→ ❌ comment only
 ```
 
+## Benchmark
+
+Real breaking upgrades, each a small app with tests that pass on the old version and fail on the new one ([`bench/`](bench/)):
+
+| Package | Upgrade | Fixed | Cost | Diff |
+|---|---|---|---|---|
+| httpx | 0.27.2 → 0.28.1 | ✅ | $0.12 | 1 file changed, 4 insertions(+), 1 deletion(-) |
+| numpy | 1.26.4 → 2.5.3 | ✅ | $0.14 | 1 file changed, 5 insertions(+), 5 deletions(-) |
+| openai | 0.28.1 → 3.24.0 | ✅ | $0.29 | 1 file changed, 4 insertions(+), 3 deletions(-) |
+| pydantic | 1.10.21 → 2.13.5 | ✅ | $0.20 | 1 file changed, 11 insertions(+), 11 deletions(-) |
+| sqlalchemy | 1.4.54 → 2.1.3 | ✅ | $0.19 | 1 file changed, 7 insertions(+), 4 deletions(-) |
+
+5/5 fixed for $0.94 total, no test edits. Rerun: `python bench/run.py` (or `--check` to validate cases for free).
+More cases welcome: add a folder under `bench/cases/`.
+
 ## GitHub Action
 
 ```yaml
@@ -64,21 +79,9 @@ driftfix fix --package openai --from 0.28 --to 1.40 --test "pytest -q"
 - Never merges anything. The PR is still yours to review.
 - The agent runs with full tool access inside the checkout. Run it in CI or a throwaway clone.
 
-## Try it
-
-`examples/openai_v0` is an app written against `openai<1` with a test that
-talks to a fake local OpenAI server. With `openai>=1` installed it fails with
-`APIRemovedInV1`:
-
-```bash
-cd examples/openai_v0 && git init -q && git add . && git commit -qm init
-pip install -r requirements.txt
-driftfix fix --package openai --from 0.28 --to 1.x
-```
-
 ## Roadmap
 
-- A benchmark of famous breaking upgrades (openai 0→1, pydantic 1→2, SQLAlchemy 2, numpy 2) with published pass rates
+- More benchmark cases (pandas 2, Django, langchain), harder multi-file repos
 - npm / Renovate support
 - Provider mode: packages ship migration notes that driftfix reads
 

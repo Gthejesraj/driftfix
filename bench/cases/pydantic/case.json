@@ -1,0 +1,1 @@
+{"package": "pydantic", "old": "pydantic==1.10.21", "new": "pydantic>=2,<3"}

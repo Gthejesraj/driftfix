@@ -1,0 +1,1 @@
+{"package": "openai", "old": "openai==0.28.1", "new": "openai>=1"}
