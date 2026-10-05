@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "driftfix"
-version = "0.1.0"
+version = "0.1.1"
 description = "Dependabot bumps it. CI breaks. driftfix fixes the code."
 readme = "README.md"
 requires-python = ">=3.10"

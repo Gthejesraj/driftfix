@@ -60,3 +60,24 @@ def test_agent_crash_is_reported(tmp_path, monkeypatch):
     code = main(["fix", "--package", "lib", "--test", TEST, "--repo", str(make_repo(tmp_path, False)),
                  "--summary", str(summary)])
     assert code == 1 and "Not logged in" in summary.read_text()
+
+
+def test_adding_a_split_out_package_is_allowed(tmp_path, monkeypatch):
+    repo = make_repo(tmp_path, False)
+    async def agent(*a):
+        (repo / "requirements.txt").write_text("lib==2\nlib-settings>=2\n")
+        (repo / "app.py").write_text("OK = True\n")
+        return "added lib-settings", 0.1
+    assert run(repo, agent, monkeypatch) == 0
+
+
+def test_pins_package():
+    from driftfix.cli import pins_package
+    import tempfile
+    repo = Path(tempfile.mkdtemp())
+    (repo / "poetry.lock").write_text("x")
+    (repo / "requirements.txt").write_text("Pydantic_Core==1\n")
+    assert pins_package(repo, "poetry.lock", "anything")
+    assert pins_package(repo, "requirements.txt", "pydantic-core")  # name normalization
+    assert not pins_package(repo, "requirements.txt", "pydantic")   # pydantic-core is a different package
+    assert not pins_package(repo, "app.py", "pydantic")

@@ -26,7 +26,7 @@ def setup(case: Path, spec: str) -> Path:
     shutil.copytree(case, repo, dirs_exist_ok=True)
     (repo / ".gitignore").write_text(".venv/\n__pycache__/\n.pytest_cache/\n")
     for cmd in (
-        "uv venv -q -p 3.12 .venv",
+        "uv venv -q --seed -p 3.12 .venv",
         f"uv pip install -q -p .venv/bin/python pytest '{spec}'",
         "git init -q && git add -A && git -c user.email=b@b -c user.name=bench commit -qm init",
     ):

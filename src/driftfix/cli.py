@@ -4,16 +4,15 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# Pinning back to the old version is not a fix.
-MANIFESTS = {
-    "requirements.txt", "pyproject.toml", "setup.py", "setup.cfg", "Pipfile", "Pipfile.lock",
-    "poetry.lock", "uv.lock", "package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
-}
+# Pinning back to the old version is not a fix. Adding a split-out package is fine.
+MANIFESTS = {"requirements.txt", "pyproject.toml", "setup.py", "setup.cfg", "Pipfile", "package.json"}
+LOCKFILES = {"Pipfile.lock", "poetry.lock", "uv.lock", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"}
 
 PROMPT = """\
 The dependency `{package}` was upgraded{versions}. The test suite now fails:
@@ -24,7 +23,9 @@ $ {test_command}
 Fix this repository's code so it works with the new version of `{package}`.
 - Read the package's changelog / migration guide for the relevant versions if you need to.
 - Change application code. Change tests only where they use `{package}`'s API directly.
-- Never pin, downgrade, or edit dependency files ({manifests}).
+- Never pin, downgrade, or change the requirement for `{package}`, and never edit lock files.
+- If the new version moved code into a separate package, you may add that package to the
+  dependency manifest and install it into the current environment.
 - Never delete or skip tests to make them pass.
 - Run `{test_command}` to confirm the fix.
 Your final message must be only a short markdown summary of what changed and why, for a PR description."""
@@ -54,11 +55,28 @@ def changed_files(repo: Path) -> list[str]:
     return [line[3:].split(" -> ")[-1] for line in out.splitlines()]
 
 
+def pins_package(repo: Path, path: str, package: str) -> bool:
+    """Did this edit touch a lock file, or any requirement line naming the upgraded package?"""
+    if Path(path).name in LOCKFILES:
+        return True
+    if Path(path).name not in MANIFESTS:
+        return False
+    diff = subprocess.run(
+        ["git", "diff", "-U0", "--", path], cwd=repo, capture_output=True, text=True
+    ).stdout
+    lines = (
+        [line[1:] for line in diff.splitlines() if line[:1] in "+-" and line[:3] not in ("+++", "---")]
+        if diff else (repo / path).read_text().splitlines()  # new, untracked file
+    )
+    names = "|".join(re.sub(r"[-_.]", "[-_.]", n) for n in re.split(r"[,\s]+", package) if n)
+    pattern = re.compile(rf"(?<![\w.-])({names})(?![\w.-])", re.IGNORECASE)
+    return any(pattern.search(line) for line in lines)
+
+
 def build_prompt(package: str, old: str | None, new: str | None, command: str, out: str) -> str:
     versions = f" from {old or '?'} to {new}" if new else (f" from {old}" if old else "")
     return PROMPT.format(
         package=package, versions=versions, test_command=command, output=out,
-        manifests=", ".join(sorted(MANIFESTS)),
     )
 
 
@@ -101,14 +119,14 @@ def fix(args: argparse.Namespace) -> int:
         summary, cost = f"Agent error: `{exc}`", 0.0
 
     touched = [f for f in changed_files(repo) if f not in baseline]
-    pinned = [f for f in touched if Path(f).name in MANIFESTS]
+    pinned = [f for f in touched if pins_package(repo, f, args.package)]
     after = run_tests(args.test, repo, args.timeout)  # don't trust the agent's word
     ok = after.passed and bool(touched) and not pinned
 
     status = "✅ Fixed" if ok else "❌ Not fixed"
     report = f"## driftfix: {args.package}\n\n**{status}** · cost ${cost:.2f}\n\n{summary}\n"
     if pinned:
-        report += f"\nRejected: agent edited dependency files {pinned}.\n"
+        report += f"\nRejected: agent changed the {args.package} requirement or a lock file in {pinned}.\n"
     if not after.passed:
         report += f"\nTests still failing:\n```\n{after.output[-3000:]}\n```\n"
     print(report)

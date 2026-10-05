@@ -25,8 +25,9 @@ Real breaking upgrades, each a small app with tests that pass on the old version
 | pydantic | 1.10.21 → 2.13.5 | ✅ | $0.20 | 1 file changed, 11 insertions(+), 11 deletions(-) |
 | sqlalchemy | 1.4.54 → 2.1.3 | ✅ | $0.19 | 1 file changed, 7 insertions(+), 4 deletions(-) |
 | pydantic (6-file app, shared base model) | 1.10.21 → 2.13.5 | ✅ | $0.51 | 4 files changed, 47 insertions(+), 29 deletions(-) |
+| pydantic (`BaseSettings` moved to new package) | 1.10.21 → 2.13.5 | ✅ | $0.22 | 2 files changed, 8 insertions(+), 5 deletions(-) |
 
-6/6 fixed for $1.45 total, no test edits. The 6-file case runs with deprecation warnings as errors and includes a silent behavior change (v2 stops coercing numeric SKUs to strings). Rerun: `python bench/run.py` (or `--check` to validate cases for free).
+7/7 fixed for $1.67 total, no test edits. The 6-file case runs with deprecation warnings as errors and includes a silent behavior change (v2 stops coercing numeric SKUs to strings). Rerun: `python bench/run.py` (or `--check` to validate cases for free).
 More cases welcome: add a folder under `bench/cases/`.
 
 ## GitHub Action
@@ -75,7 +76,7 @@ driftfix fix --package openai --from 0.28 --to 1.40 --test "pytest -q"
 ## Guardrails
 
 - Your tests decide. driftfix reruns them after the agent finishes; the agent's word doesn't count.
-- Edits to dependency files (pinning back) are rejected.
+- Changing the upgraded package's requirement (pinning back) or editing lock files is rejected. Adding a split-out package (e.g. `pydantic-settings`) is allowed.
 - Requires a clean git tree, so every change is a reviewable diff.
 - Never merges anything. The PR is still yours to review.
 - The agent runs with full tool access inside the checkout. Run it in CI or a throwaway clone.
