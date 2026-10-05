@@ -27,7 +27,7 @@ Fix this repository's code so it works with the new version of `{package}`.
 - Never pin, downgrade, or edit dependency files ({manifests}).
 - Never delete or skip tests to make them pass.
 - Run `{test_command}` to confirm the fix.
-Finish with a short markdown summary of what changed and why, for a PR description."""
+Your final message must be only a short markdown summary of what changed and why, for a PR description."""
 
 
 @dataclass
@@ -72,6 +72,8 @@ async def run_agent(prompt: str, repo: Path, model: str, max_turns: int, budget:
         permission_mode="bypassPermissions",  # headless; run in CI or a throwaway checkout
         max_turns=max_turns,
         max_budget_usd=budget,
+        setting_sources=["project"],  # repo's CLAUDE.md, not the user's personal config
+        skills=[],
     )
     summary, cost = "", 0.0
     async for message in query(prompt=prompt, options=options):
