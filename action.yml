@@ -30,6 +30,10 @@ runs:
       env:
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
       run: |
+        if [ -z "$ANTHROPIC_API_KEY" ]; then
+          echo "::error::ANTHROPIC_API_KEY is empty. Dependabot PRs only see Dependabot secrets: Settings → Secrets and variables → Dependabot."
+          exit 1
+        fi
         set +e
         driftfix fix \
           --package "${{ inputs.package || steps.meta.outputs.dependency-names }}" \
@@ -54,3 +58,9 @@ runs:
       run: |
         [ -f "$RUNNER_TEMP/driftfix.md" ] || exit 0
         gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/driftfix.md"
+
+    - if: steps.fix.outputs.code != '0'
+      shell: bash
+      run: |
+        echo "::error::driftfix could not fix this upgrade (exit ${{ steps.fix.outputs.code }}). See the PR comment."
+        exit 1

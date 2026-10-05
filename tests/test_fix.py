@@ -50,3 +50,13 @@ def test_pinning_back_is_rejected(tmp_path, monkeypatch):
         (repo / "app.py").write_text("OK = True\n")
         return "pinned", 0.1
     assert run(repo, agent, monkeypatch) == 1
+
+
+def test_agent_crash_is_reported(tmp_path, monkeypatch):
+    async def agent(*a):
+        raise RuntimeError("Not logged in")
+    summary = tmp_path / "report.md"
+    monkeypatch.setattr(cli, "run_agent", agent)
+    code = main(["fix", "--package", "lib", "--test", TEST, "--repo", str(make_repo(tmp_path, False)),
+                 "--summary", str(summary)])
+    assert code == 1 and "Not logged in" in summary.read_text()

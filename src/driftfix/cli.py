@@ -95,7 +95,10 @@ def fix(args: argparse.Namespace) -> int:
 
     print(f"Tests fail after upgrading {args.package}. Handing off to Claude ({args.model})...")
     prompt = build_prompt(args.package, args.from_version, args.to_version, args.test, before.output)
-    summary, cost = asyncio.run(run_agent(prompt, repo, args.model, args.max_turns, args.budget))
+    try:
+        summary, cost = asyncio.run(run_agent(prompt, repo, args.model, args.max_turns, args.budget))
+    except Exception as exc:  # still report on the PR instead of dying silently
+        summary, cost = f"Agent error: `{exc}`", 0.0
 
     touched = [f for f in changed_files(repo) if f not in baseline]
     pinned = [f for f in touched if Path(f).name in MANIFESTS]
