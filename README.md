@@ -57,20 +57,21 @@ for free with `python bench/run.py --check`.
 
 ### Real projects
 
-The synthetic cases above are small. On real open-source projects broken by
-pydantic 1 → 2 ([study](https://github.com/Gthejesraj/driftfix-study), 39
-candidates → 4 real breaks):
+The synthetic cases above are small, so I also ran driftfix on real
+open-source projects ([study](https://github.com/Gthejesraj/driftfix-study)).
+183 GitHub repos still on pydantic 1, SQLAlchemy 1.x or numpy 1 were upgraded
+in throwaway CI runners, and 16 genuinely broke. Every diff was read and graded:
 
-| Project | Tests broken | Result | Cost |
-|---|---|---|---|
-| internetarchive/fatcat-scholar | 15 of 115 | ✅ fixed, 11 files | $2.38 |
-| antonagestam/phantom-types | 2 of 677 | ✅ fixed, one test assertion edit to review | $2.93 |
-| epi2me-labs/ezcharts | 5 of 37 | ✅ fixed, including the model generator | ~$1 |
-| bdd100k/bdd100k | 2 of 46 | ⚠️ tests pass, but via a workaround for a third-party library | $0.95 |
+| Grade | Count | Examples |
+|---|---|---|
+| Clean, mergeable | 9 | internetarchive/fatcat-scholar (15 failing tests, 11 files), preset-io/backend-sdk, org-arl/arlpy (caught a silent `uint8` wraparound) |
+| Correct, needs a maintainer decision | 3 | edits a test assertion, or upgrades other dependencies (TensorFlow, ASE) |
+| Workaround around a third-party library | 3 | archived `gym` still uses `np.bool8` (takuseno/d3rlpy, njustesen/botbowl) |
+| Not fixed | 1 | five of the project's dependencies have no numpy 2 release |
 
-Real fixes cost $1–3, not $0.20, so set `budget` to at least 3 for real
-codebases. Always read the diff: "tests pass" and "correct" aren't the same
-thing. Details in the study's [RESULTS.md](https://github.com/Gthejesraj/driftfix-study/blob/main/RESULTS.md).
+Real fixes cost $0.29–2.93 (median about $1.40), so set `budget` to at least
+3 for real codebases. Always read the diff: "tests pass" and "correct" aren't
+the same thing. Full table: [RESULTS.md](https://github.com/Gthejesraj/driftfix-study/blob/main/RESULTS.md).
 
 ## Quick start: GitHub Action
 
