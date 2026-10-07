@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.2
 - Pinning guard reads requirements inside code lines (`install_requires=[...]`), fixing a false rejection found on cuenca-mx/clabe-python
 
 ## 0.2.1
