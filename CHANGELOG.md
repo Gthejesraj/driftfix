@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Pinning guard reads requirements inside code lines (`install_requires=[...]`), fixing a false rejection found on cuenca-mx/clabe-python
+
 ## 0.2.1
 - Test commands no longer see `ANTHROPIC_API_KEY` or GitHub tokens
 - Report the real cost when the agent stops on its budget (was $0.00)

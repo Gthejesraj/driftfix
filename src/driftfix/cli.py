@@ -64,12 +64,23 @@ def changed_files(repo: Path) -> list[str]:
     return [line[3:].split(" -> ")[-1] for line in out.splitlines()]
 
 
-def admits(line: str, new_version: str | None) -> bool:
-    """Is this requirement line one that allows the upgraded version (e.g. a loosened cap)?"""
+def admits(line: str, names: str, new_version: str | None) -> bool:
+    """Does every requirement for the package on this line allow the upgraded version?
+
+    Handles bare lines (`pydantic>=2`) and code lines (`install_requires=['pydantic>=2'],`).
+    """
+    reqs = []
+    for text in [*re.findall(r"[\"']([^\"']+)[\"']", line), line.strip().strip("\"',")]:
+        try:
+            req = Requirement(text)
+        except InvalidRequirement:
+            continue
+        if re.fullmatch(names, req.name, re.IGNORECASE):
+            reqs.append(req)
     try:
-        req = Requirement(line.strip().strip("\"',"))
-        return new_version is not None and req.specifier.contains(Version(new_version), prereleases=True)
-    except (InvalidRequirement, InvalidVersion):
+        return bool(new_version and reqs) and all(
+            r.specifier.contains(Version(new_version), prereleases=True) for r in reqs)
+    except InvalidVersion:
         return False
 
 
@@ -88,7 +99,7 @@ def pins_package(repo: Path, path: str, package: str, new_version: str | None = 
     )
     names = "|".join(re.sub(r"[-_.]", "[-_.]", n) for n in re.split(r"[,\s]+", package) if n)
     pattern = re.compile(rf"(?<![\w.-])({names})(?![\w.-])", re.IGNORECASE)
-    return any(pattern.search(line) and not admits(line, new_version) for line in added)
+    return any(pattern.search(line) and not admits(line, names, new_version) for line in added)
 
 
 def build_prompt(package: str, old: str | None, new: str | None, command: str, out: str) -> str:

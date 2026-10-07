@@ -121,3 +121,16 @@ def test_loosening_cap_is_allowed_pinning_back_is_not(tmp_path):
     (repo / "requirements.txt").write_text("lib>=2.0.0\n")         # unknown target version: be strict
     assert pins_package(repo, "requirements.txt", "lib", None)
     assert pins_package(repo, "requirements.txt", "lib", "1.x")    # unparsable version: be strict
+
+
+def test_guard_reads_requirements_inside_code(tmp_path):
+    from driftfix.cli import pins_package
+    repo = make_repo(tmp_path, True)
+    (repo / "setup.py").write_text("install_requires=['lib>=1.4,<2.0'],\n")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    commit = ["git", "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "s"]
+    subprocess.run(commit, cwd=repo, check=True)
+    (repo / "setup.py").write_text("install_requires=['lib>=2.0', 'other<1'],\n")   # widened
+    assert not pins_package(repo, "setup.py", "lib", "2.13.5")
+    (repo / "setup.py").write_text("install_requires=['lib>=1.4,<2.0', 'x'],\n")    # still excludes 2.x
+    assert pins_package(repo, "setup.py", "lib", "2.13.5")
