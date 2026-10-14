@@ -69,6 +69,13 @@ in throwaway CI runners, and 16 genuinely broke. Every diff was read and graded:
 | Workaround around a third-party library | 3 | archived `gym` still uses `np.bool8` (takuseno/d3rlpy, njustesen/botbowl) |
 | Not fixed | 1 | five of the project's dependencies have no numpy 2 release |
 
+Against ground truth: we replayed 13 migrations that maintainers had already
+made, starting from the commit before their fix. driftfix fixed 10. On
+simvia-tech/meshlane it made the same five edits as the maintainer, and on
+agronholm/sqlacodegen and rsokl/MyGrad its code passes the maintainers' own
+updated tests. The 3 failures were large migrations (10 to 26 files) that ran
+out of a $3 budget.
+
 Real fixes cost $0.29–2.93 (median about $1.40), so set `budget` to at least
 3 for real codebases. Always read the diff: "tests pass" and "correct" aren't
 the same thing. Full table: [RESULTS.md](https://github.com/Gthejesraj/driftfix-study/blob/main/RESULTS.md).
